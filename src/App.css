@@ -1,38 +1,186 @@
-.App {
+main {
+  margin: 0 auto;
+  max-width: 24rem;
+  padding: 2rem 1rem 4rem;
+}
+h1 {
+  font-size: 2.5rem;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.25rem;
+  margin: 1rem 0;
+  font-weight: 500;
+}
+h1,
+h2 {
+  margin: 0.5rem 0 0.5rem 0;
+  font-weight: 300;
   text-align: center;
 }
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+p {
+  margin: 0 0 0.5rem 0;
+  font-weight: 400;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+a {
+  text-decoration: none;
+  color: #146eeb;
 }
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+a:hover {
+  text-decoration: underline;
+}
+pre,
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+pre {
+  margin: 0.5rem 0;
+  padding: 1rem;
+  background-color: #333;
+  color: #eee;
+  border-radius: 0.25rem;
+  overflow-x: auto;
+}
+.example pre {
+  max-width: none;
+}
+button {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.15;
+  letter-spacing: 0.025rem;
+  border: none;
+  border-radius: 0.25rem;
+  border: 1px solid #aaa;
+  background-color: transparent;
+  color: #444;
+  outline: none;
+  text-decoration: none;
+  user-select: none;
+  width: auto;
+  height: auto;
+  margin: 0.75rem auto;
+}
+button:hover,
+button:focus {
+  text-decoration: none;
+  border-color: #555;
+  color: #000;
+}
+textarea {
+  display: block;
+  height: 5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  outline: none;
+  width: 100%;
+  margin: 0.25rem 0;
+  resize: none;
+  line-height: 1.15;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+  font-size: 1rem;
+}
+textarea:focus {
+  border-color: #444;
+}
+legend {
+  padding: 0 0.25rem;
+}
+.forms {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  align-items: center;
 }
-
-.App-link {
-  color: #61dafb;
+.form {
+  width: 100%;
 }
-
-@keyframes App-logo-spin {
-  from {
+.file-upload {
+  margin: 1rem 0;
+  overflow: hidden;
+  max-width: 100%;
+  width: 200px;
+}
+.divider {
+  text-align: center;
+  margin: 1rem;
+}
+footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #333;
+}
+.error {
+  margin-top: 1rem;
+  color: #f44336;
+  font-weight: 500;
+}
+.loader {
+  margin: 2rem auto;
+  width: 4rem;
+  height: 4rem;
+  border: 0.25rem solid #333;
+  border-top: 0.25rem solid #eee;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% {
     transform: rotate(0deg);
   }
-  to {
+  100% {
     transform: rotate(360deg);
+  }
+}
+
+@media only screen and (min-width: 720px) {
+  main {
+    max-width: none;
+  }
+  .sections,
+  footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
+  section {
+    width: 20rem;
+  }
+  .forms {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+@media only screen and (min-width: 580px) and (max-width: 719px) {
+  main {
+    max-width: none;
+  }
+  .examples,
+  .forms {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .example {
+    width: 50%;
+    flex: 1 1 50%;
+  }
+  .example:first-child {
+    padding-right: 0.5rem;
+  }
+  .example:last-child {
+    padding-left: 0.5rem;
   }
 }
