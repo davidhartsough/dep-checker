@@ -118,7 +118,10 @@ function getDepListFromText(text) {
     throw Error("Invalid input: No dependencies listed.");
   }
   // Get only the lines with a dependency listing.
-  const list = text.split(/\r?\n/).filter((line) => linePattern.test(line));
+  const list = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter((line) => linePattern.test(line));
   // If nothing matched the RegEx, then the input has invalid formatting.
   if (list.length < 1) {
     throw Error("Invalid input: Please check the dependency list formatting.");

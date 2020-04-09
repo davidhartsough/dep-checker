@@ -79,27 +79,29 @@ X
   expect(output).toBe("X depends on Y");
 });
 
-// TODO !!
 test("ignore extra spaces in lines", () => {
   const text = `A depends on B  C
 B  depends on W
 C depends  on Y
 D depends on  Z
 E depends on X   Y    Z     
-F depends on X   Y    Z     A`;
+F depends on X   Y    Z     A
+  Space  depends  on  Time  `;
   const { input, output } = getFullDepDataFromText(text);
   expect(input).toBe(`A depends on B C
 B depends on W
 C depends on Y
 D depends on Z
 E depends on X Y Z
-F depends on X Y Z A`);
+F depends on X Y Z A
+Space depends on Time`);
   expect(output).toBe(`A depends on B C W Y
 B depends on W
 C depends on Y
 D depends on Z
 E depends on X Y Z
-F depends on X Y Z A B C W`);
+F depends on X Y Z A B W C
+Space depends on Time`);
 });
 
 // ---- Test thrown errors ---- //
@@ -137,7 +139,7 @@ on depends on `;
 test("Throw error: Invalid dependency definitions", () => {
   const text = `X X depends on Y
 Y and Z depends on A
- A depends on B 
+depends on A depends on B 
  `;
   expect(() => getFullDepDataFromText(text)).toThrow(
     "Invalid input: Please check the dependency list formatting."
