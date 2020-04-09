@@ -79,6 +79,29 @@ X
   expect(output).toBe("X depends on Y");
 });
 
+// TODO !!
+test("ignore extra spaces in lines", () => {
+  const text = `A depends on B  C
+B  depends on W
+C depends  on Y
+D depends on  Z
+E depends on X   Y    Z     
+F depends on X   Y    Z     A`;
+  const { input, output } = getFullDepDataFromText(text);
+  expect(input).toBe(`A depends on B C
+B depends on W
+C depends on Y
+D depends on Z
+E depends on X Y Z
+F depends on X Y Z A`);
+  expect(output).toBe(`A depends on B C W Y
+B depends on W
+C depends on Y
+D depends on Z
+E depends on X Y Z
+F depends on X Y Z A B C W`);
+});
+
 // ---- Test thrown errors ---- //
 
 test("Throw error: No dependency listings", () => {

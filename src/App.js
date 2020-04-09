@@ -29,10 +29,16 @@ export default function App() {
     event.preventDefault();
     reset();
     const file = fileInput.current.files[0];
+    if (!file) return handleReject("Whoops. Please upload a text file.");
     handleFile(file).then(handleResolve).catch(handleReject);
   }
   function onTextSubmit() {
     reset();
+    if (textInput.length < 14) {
+      return handleReject(
+        "Whoops. You need to enter at least one dependency listing in the text area field."
+      );
+    }
     try {
       const data = getFullDepDataFromText(textInput);
       handleResolve(data);
@@ -72,7 +78,8 @@ Y depends on Z`}
           <p>
             Each line must follow this format. Any library or dependency must be
             alphanumeric but can contain the symbols: <code>$</code>,{" "}
-            <code>@</code>, <code>_</code>, or <code>-</code>.
+            <code>@</code>, <code>_</code>, or <code>-</code>. Also, library
+            names cannot begin with a number.
           </p>
           <ul>
             <li>
