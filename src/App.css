@@ -1,13 +1,13 @@
 main {
   margin: 0 auto;
   max-width: 24rem;
-  padding: 2rem 1rem 4rem;
+  padding: 0.5rem 1rem 4rem;
 }
 h1 {
   font-size: 2.5rem;
 }
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
 }
 h3 {
   font-size: 1.25rem;
@@ -104,11 +104,15 @@ legend {
 .form {
   width: 100%;
 }
-.file-upload {
+.file-upload-wrapper {
   margin: 1rem 0;
   overflow: hidden;
+}
+.file-upload {
+  cursor: pointer;
+  overflow: hidden;
   max-width: 100%;
-  width: 200px;
+  width: 240px;
 }
 .divider {
   text-align: center;
@@ -142,31 +146,17 @@ footer {
   }
 }
 
-@media only screen and (min-width: 720px) {
+@media only screen and (min-width: 580px) {
   main {
     max-width: none;
+    padding: 1rem 1rem 4rem;
   }
-  .sections,
-  footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-evenly;
-  }
-  section {
-    width: 20rem;
-  }
-  .forms {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  h2 {
+    font-size: 1.5rem;
   }
 }
 
 @media only screen and (min-width: 580px) and (max-width: 719px) {
-  main {
-    max-width: none;
-  }
   .examples,
   .forms {
     display: flex;
@@ -182,5 +172,26 @@ footer {
   }
   .example:last-child {
     padding-left: 0.5rem;
+  }
+  .file-upload {
+    width: 212px;
+  }
+}
+
+@media only screen and (min-width: 720px) {
+  .sections,
+  footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+  }
+  section {
+    width: 20rem;
+  }
+  .forms {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 }

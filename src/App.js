@@ -83,7 +83,7 @@ export default function App() {
           </p>
           <div className="examples">
             <div className="example">
-              <p>For example, if an input text files reads:</p>
+              <p>For example, if an input text file reads:</p>
               <pre>
                 {`X depends on Y R
 Y depends on Z`}
