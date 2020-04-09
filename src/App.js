@@ -1,6 +1,25 @@
 import React, { useState, useRef } from "react";
-import { handleFile, getFullDepDataFromText } from "./dep-checker";
+import { processDepsInText } from "./dep-checker";
 import "./App.css";
+
+/**
+ * Parses the text of a file and returns it.
+ * @param {Blob} file - A submitted text file (.txt)
+ * @returns {Promise<string>} Resolves with the parsed string. Rejects with an error message string.
+ */
+function parseFile(file) {
+  return new Promise(function (resolve, reject) {
+    // Try to use the latest Blob.text() web API method.
+    if (typeof file.text === "function") {
+      return file.text().then(resolve).catch(reject);
+    }
+    // Fallback on FileReader if the browser doesn't support the newer method.
+    const reader = new FileReader();
+    reader.onload = ({ target }) => resolve(target.result);
+    reader.onerror = () => reject(reader.error.message);
+    reader.readAsText(file);
+  });
+}
 
 export default function App() {
   const [input, setInput] = useState(null);
@@ -14,37 +33,40 @@ export default function App() {
     setInput(null);
     setOutput(null);
     setError(null);
-    setLoading(true);
   }
-  function handleResolve(data) {
-    setInput(data.input);
-    setOutput(data.output);
-    setLoading(false);
-  }
-  function handleReject(error) {
-    setError(error);
-    setLoading(false);
+  function handleText(text) {
+    try {
+      const data = processDepsInText(text);
+      setInput(data.input);
+      setOutput(data.output);
+    } catch ({ message }) {
+      setError(message);
+    }
   }
   function onFileSubmit(event) {
     event.preventDefault();
     reset();
     const file = fileInput.current.files[0];
-    if (!file) return handleReject("Whoops. Please upload a text file.");
-    handleFile(file).then(handleResolve).catch(handleReject);
+    if (!file) return setError("Whoops. Please upload a text file.");
+    setLoading(true);
+    parseFile(file)
+      .then((text) => {
+        handleText(text);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("There was an error parsing the file.");
+        setLoading(false);
+      });
   }
   function onTextSubmit() {
     reset();
     if (textInput.length < 14) {
-      return handleReject(
-        "Whoops. You need to enter at least one dependency listing in the text area field."
+      return setError(
+        "Please enter at least one dependency listing in the text area field."
       );
     }
-    try {
-      const data = getFullDepDataFromText(textInput);
-      handleResolve(data);
-    } catch ({ message }) {
-      handleReject(message);
-    }
+    handleText(textInput);
   }
   return (
     <>
@@ -113,7 +135,9 @@ Y depends on Z`}
                     className="file-upload"
                   />
                 </div>
-                <button type="submit">Submit</button>
+                <button type="submit" disabled={loading}>
+                  Submit
+                </button>
               </fieldset>
             </form>
             <p className="divider">Or</p>

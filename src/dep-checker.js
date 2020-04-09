@@ -1,68 +1,109 @@
 /**
- * Gets the names of the primary libraries defined with an array of dependencies in a dependency list.
+ * Tests a line of text to see if it is a valid definition of a library dependency listing.
+ * @example
+ * // returns true
+ * isDepListingLine("A depends on B");
+ * @param {string} line - a line from the initial text input
+ * @returns {boolean}
+ */
+function isDepListingLine(line) {
+  const linePattern = /^[A-Za-z_$@][A-Za-z0-9@$_-]* depends on [A-Za-z_$@][A-Za-z0-9@$ _-]*$/;
+  return linePattern.test(line);
+}
+
+/**
+ * Retrieves the lines of the given text which are a dependency listing.
+ * @example
+ * // returns ["A depends on B", "B depends on C D"]
+ * getDepListingsFromText("A depends on B\nB depends on C D\nOther line");
+ * @param {string} text - The full input text data as a string.
+ * @returns {string[]} An array of strings, each being a single line defining a library's dependencies.
+ * @throws {Error} Throws Error objects if the input text has no listings or isn't formatted correctly.
+ */
+function getDepListingsFromText(text) {
+  if (!text.includes(" depends on ")) {
+    throw Error("Invalid input: No dependencies listed.");
+  }
+  const depListings = text
+    .split(/\r?\n/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(isDepListingLine);
+  if (depListings.length < 1) {
+    throw Error("Invalid input: Please check the dependency list formatting.");
+  }
+  return depListings;
+}
+
+/**
+ * Checks the names of the primary libraries defined for any duplicate listings.
+ * @example
+ * validateDepListingsAreUnique(["A depends on B", "B depends on C D"]);
  * @param {string[]} depList - An array of strings that are each a library dependency listing.
- * @returns {string[]} An array of library names.
  * @throws {Error} Throws a generic Error object if a library is defined twice.
  */
-function getLibsFromDepList(depList) {
-  // Get the names of the primary libraries by pulling the first "word" from each line in the list.
-  const libs = depList.map((line) => line.substring(0, line.indexOf(" ")));
-  // Check for duplicate library listings.
-  if (new Set(libs).size !== libs.length) {
+function validateDepListingsAreUnique(depList) {
+  const definedLibraries = depList.map((line) =>
+    line.substring(0, line.indexOf(" "))
+  );
+  if (new Set(definedLibraries).size !== definedLibraries.length) {
     throw Error(
       "Invalid dependency data: There is a duplicate library dependency listing."
     );
   }
-  return libs;
 }
 
 /**
  * Breaks down a list of dependency listings into a structured object.
- * @param {string[]} depList - An array of strings that are each a library dependency listing.
+ * @example
+ * // returns { "A": ["B"], "B": ["C", "D"] }
+ * createDepStructureFromDepListings(["A depends on B", "B depends on C D"]);
+ * @param {string[]} depListings - Each item in the array must be a library dependency listing.
  * @returns {Object.<string, string[]>} Dependency data structured as: {"lib": ["dep","dep"]}
  * @throws {Error} Throws a generic Error object if a library depends on itself.
  */
-function getDepDataFromDepList(depList) {
-  const depData = {};
-  depList.forEach((line) => {
+function createDepStructureFromDepListings(depListings) {
+  const depStructure = {};
+  depListings.forEach((line) => {
     const words = line.split(" ");
-    // Remove potential duplicates.
-    depData[words[0]] = [...new Set(words.slice(3))];
-    // Check for a cyclical dependency.
-    if (depData[words[0]].includes(words[0])) {
-      throw Error("Invalid dependency data: A library depends on itself.");
+    const libraryName = words[0];
+    const dependencies = [...new Set(words.slice(3))];
+    if (dependencies.includes(libraryName)) {
+      throw Error(
+        "Invalid dependency data: A library directly depends on itself."
+      );
     }
+    depStructure[libraryName] = dependencies;
   });
-  return depData;
+  return depStructure;
 }
 
 /**
- * Given an initial input dependency listing, calculate the complete dependency graph for all libraries.
- * @param {Object.<string, string[]>} inputDepData - Dependency data structured as {"lib": ["dep","dep"]}
- * @param {string[]} [libraries] - An array of library names
- * @returns {Object.<string, string[]>} Complete dependency graph structured as: {"lib": ["dep", "dep"]}
+ * Generates the fully expanded dependency structure for all libraries listed in
+ * the given input dependency data structure.
+ * @example
+ * // returns { "A": ["B", "C", "D"], "B": ["C", "D"] }
+ * expandDepStructure({ "A": ["B"], "B": ["C", "D"] });
+ * @param {Object.<string, string[]>} inputDepStructure - The input dependency data structure
+ * @returns {Object.<string, string[]>} The fully expanded dependency structure
  */
-function getFullDepGraph(inputDepData, libraries) {
-  const libs = libraries || Object.keys(inputDepData);
-  // Start with the given dependency data as a base.
-  const outputDepData = inputDepData;
-  // Adds the dependencies to the library's list,
-  // and recursively grabs dependencies of those dependencies.
+function expandDepStructure(inputDepStructure) {
+  const libraries = Object.keys(inputDepStructure);
+  const outputDepStructure = inputDepStructure;
+  // Adds the dependencies to the library's dependency list,
+  // and recursively grabs the dependencies of those dependencies.
   function recursiveAdd(lib, deps) {
     deps.forEach((dep) => {
       // Ignore a cyclical dependency.
       if (dep === lib) return;
-      // Add the dependencies only if it has not already been added.
-      if (!outputDepData[lib].includes(dep)) {
-        outputDepData[lib].push(dep);
+      if (!outputDepStructure[lib].includes(dep)) {
+        outputDepStructure[lib].push(dep);
       }
       // See if the dependency has its own dependency list.
-      const index = libs.indexOf(dep);
+      const index = libraries.indexOf(dep);
       if (index >= 0) {
-        // If so, pull its dependency list,
-        // and filter to only the ones that haven't been added yet.
-        const depsToAdd = inputDepData[libs[index]].filter(
-          (dependency) => !outputDepData[lib].includes(dependency)
+        // Get the dep's dependency list and filter to only the ones that haven't been added yet.
+        const depsToAdd = inputDepStructure[libraries[index]].filter(
+          (dependency) => !outputDepStructure[lib].includes(dependency)
         );
         // Repeat this process unless all the dependencies have already been added.
         if (depsToAdd.length > 0) {
@@ -71,122 +112,50 @@ function getFullDepGraph(inputDepData, libraries) {
       }
     });
   }
-  Object.entries(inputDepData).forEach(([lib, deps]) => {
+  Object.entries(inputDepStructure).forEach(([lib, deps]) => {
     recursiveAdd(lib, deps);
   });
-  return outputDepData;
+  return outputDepStructure;
 }
 
 /**
  * Converts a given dependency data structure into a formatted multiline string.
+ * @example
+ * // returns "A depends on B C D\nB depends on C D"
+ * depStructureToString({ "A": ["B", "C", "D"], "B": ["C", "D"] });
  * @param {Object.<string, string[]>} depData - Dependency data structured as: {"lib": ["dep","dep"]}
  * @returns {string} The formatted multiline string outlining the libraries and their dependencies.
- * Each line is formatted as: "lib depends on dep dep dep"
  */
-function depDataToString(depData) {
+function depStructureToString(depData) {
   return Object.entries(depData)
     .map(([lib, deps]) => `${lib} depends on ${deps.join(" ")}`)
     .join("\n");
 }
 
 /**
- * Given a multiline string input, checks for a list of formatted library dependencies,
- * and returns an outline of all of the libraries and their complete dependency list.
- * @param {string[]} depList - An array of strings that are each a library dependency listing.
- * @returns {string} The full, formatted dependency list as a multiline string.
- * @throws {Error} Throws generic Error objects if the dependency data is invalid.
- */
-function checkDependencies(depList) {
-  const libs = getLibsFromDepList(depList);
-  const inputDepData = getDepDataFromDepList(depList);
-  const outputDepData = getFullDepGraph(inputDepData, libs);
-  return depDataToString(outputDepData);
-}
-
-// RegEx pattern for a single line defining a library and its dependencies.
-const linePattern = /^[A-Za-z_$@][A-Za-z0-9@$_-]* depends on [A-Za-z_$@][A-Za-z0-9@$ _-]*$/;
-
-/**
- * Retrieves the lines of the given text which are a dependency listing.
- * @param {string} text - The full input text data as a string.
- * @returns {string[]} An array of strings, each being a single line defining a library's dependencies.
- * @throws {Error} Throws Error objects if the input text has no listings or isn't formatted correctly.
- */
-function getDepListFromText(text) {
-  // Check to see if there are any dependencies listed at all.
-  if (!text.includes(" depends on ")) {
-    throw Error("Invalid input: No dependencies listed.");
-  }
-  // Get only the lines with a dependency listing.
-  const list = text
-    .split(/\r?\n/)
-    .map((line) => line.replace(/\s+/g, " ").trim())
-    .filter((line) => linePattern.test(line));
-  // If nothing matched the RegEx, then the input has invalid formatting.
-  if (list.length < 1) {
-    throw Error("Invalid input: Please check the dependency list formatting.");
-  }
-  return list;
-}
-
-/**
- * @typedef Response
+ * @typedef ResponseData
  * @type {Object}
- * @property {string} input - A multiline string of only the dependency listings from the text file.
- * @property {string} output - The resulting dependency list.
+ * @property {string} input - A multiline string of only the dependency listings from input text.
+ * @property {string} output - A multiline string of the fully expanded dependency listings.
  */
 /**
- * Parses the text input, checks the input's dependency list, and returns a data response object
- * containing both the parsed input dependency list and the calculated output as a complete
- * library dependency graph formatted to a multiline string.
- * @param {string} text - Submitted text input as a string
- * @returns {Response} Returns a Response object
+ * Given a multiline string input, parses the text input, gets the library dependency listings,
+ * and returns a data response object that contains both the parsed input dependency listings
+ * and the calculated output as a fully expanded library dependency graph formatted to a string.
+ * @example
+ * // returns { input: "A depends on B\nB depends on C", output: "A depends on B C\nB depends on C" }
+ * processDepsInText("A depends on B\nB depends on C\nOther line");
+ * @param {string} text - The submitted text input as a string.
+ * @returns {ResponseData} A ResponseData package that defines the input and output.
  * @throws {Error} Throws generic Error objects if the input is invalid.
  */
-export function getFullDepDataFromText(text) {
-  const list = getDepListFromText(text);
-  const output = checkDependencies(list);
-  return { input: list.join("\n"), output };
-}
-
-/**
- * Parses the text of a file and returns it.
- * @param {Blob} file - A submitted text file (.txt)
- * @returns {Promise<string>} Resolves with the parsed string. Rejects with an error message string.
- */
-function parseFile(file) {
-  return new Promise(function (resolve, reject) {
-    // Try to use the latest Blob.text() web API method.
-    if (typeof file.text === "function") {
-      return file.text().then(resolve).catch(reject);
-    }
-    // Fallback on FileReader if the browser doesn't support the newer method.
-    const reader = new FileReader();
-    reader.onload = ({ target }) => resolve(target.result);
-    reader.onerror = () => reject(reader.error.message);
-    reader.readAsText(file);
-  });
-}
-
-/**
- * Parses a submitted text file (.txt), checks the input's dependency list,
- * and returns a data response containing both the parsed input dependency list
- * and the output as a complete library dependency graph as a multiline string.
- * @param {Blob} file - A submitted text file (.txt)
- * @returns {Promise<Response|string>} Resolves with a Response object,
- * or rejects with an error message string.
- */
-export function handleFile(file) {
-  return new Promise(function (resolve, reject) {
-    parseFile(file)
-      .then((text) => {
-        try {
-          const data = getFullDepDataFromText(text);
-          resolve(data);
-        } catch ({ message }) {
-          reject(message);
-        }
-      })
-      .catch(reject);
-  });
+export function processDepsInText(text) {
+  const depListings = getDepListingsFromText(text);
+  validateDepListingsAreUnique(depListings);
+  const inputDepStructure = createDepStructureFromDepListings(depListings);
+  const outputDepStructure = expandDepStructure(inputDepStructure);
+  return {
+    input: depListings.join("\n"),
+    output: depStructureToString(outputDepStructure),
+  };
 }
